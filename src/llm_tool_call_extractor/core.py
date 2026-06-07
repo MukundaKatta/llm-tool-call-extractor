@@ -139,9 +139,7 @@ def _extract_anthropic(response: dict[str, Any]) -> list[ToolCallRequest]:
         raw_input = block.get("input")
         args, raw = _parse_arguments(raw_input)
         meta = {
-            k: v
-            for k, v in block.items()
-            if k not in ("type", "id", "name", "input")
+            k: v for k, v in block.items() if k not in ("type", "id", "name", "input")
         }
         calls.append(
             ToolCallRequest(

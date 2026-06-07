@@ -97,11 +97,7 @@ OPENAI_MULTI = {
     ]
 }
 
-OPENAI_NO_TOOLS = {
-    "choices": [
-        {"message": {"role": "assistant", "content": "Hello!"}}
-    ]
-}
+OPENAI_NO_TOOLS = {"choices": [{"message": {"role": "assistant", "content": "Hello!"}}]}
 
 
 # ---------------------------------------------------------------------------
@@ -177,21 +173,13 @@ def test_anthropic_raw_arguments_none_for_dict():
 
 
 def test_anthropic_no_id():
-    resp = {
-        "content": [
-            {"type": "tool_use", "name": "ping", "input": {}}
-        ]
-    }
+    resp = {"content": [{"type": "tool_use", "name": "ping", "input": {}}]}
     calls = extract_from_anthropic(resp)
     assert calls[0].id == ""
 
 
 def test_anthropic_no_name():
-    resp = {
-        "content": [
-            {"type": "tool_use", "id": "x", "input": {}}
-        ]
-    }
+    resp = {"content": [{"type": "tool_use", "id": "x", "input": {}}]}
     calls = extract_from_anthropic(resp)
     assert calls[0].name == ""
 
@@ -213,11 +201,7 @@ def test_anthropic_extra_fields_in_metadata():
 
 
 def test_anthropic_null_input():
-    resp = {
-        "content": [
-            {"type": "tool_use", "id": "x", "name": "t", "input": None}
-        ]
-    }
+    resp = {"content": [{"type": "tool_use", "id": "x", "name": "t", "input": None}]}
     calls = extract_from_anthropic(resp)
     assert calls[0].arguments == {}
 
@@ -268,15 +252,19 @@ def test_openai_raw_arguments_stored():
 
 def test_openai_malformed_json_args():
     bad = {
-        "choices": [{
-            "message": {
-                "tool_calls": [{
-                    "id": "c",
-                    "type": "function",
-                    "function": {"name": "t", "arguments": "not json {"}
-                }]
+        "choices": [
+            {
+                "message": {
+                    "tool_calls": [
+                        {
+                            "id": "c",
+                            "type": "function",
+                            "function": {"name": "t", "arguments": "not json {"},
+                        }
+                    ]
+                }
             }
-        }]
+        ]
     }
     calls = extract_from_openai(bad)
     assert calls[0].arguments == {}
@@ -394,15 +382,19 @@ def test_extractor_arguments_are_dict():
 def test_openai_dict_arguments_parsed():
     # Some implementations may pass dict directly instead of JSON string
     resp = {
-        "choices": [{
-            "message": {
-                "tool_calls": [{
-                    "id": "x",
-                    "type": "function",
-                    "function": {"name": "t", "arguments": {"key": "val"}}
-                }]
+        "choices": [
+            {
+                "message": {
+                    "tool_calls": [
+                        {
+                            "id": "x",
+                            "type": "function",
+                            "function": {"name": "t", "arguments": {"key": "val"}},
+                        }
+                    ]
+                }
             }
-        }]
+        ]
     }
     calls = extract_from_openai(resp)
     assert calls[0].arguments == {"key": "val"}
@@ -446,20 +438,24 @@ def test_openai_first_choice_used():
         "choices": [
             {
                 "message": {
-                    "tool_calls": [{
-                        "id": "first",
-                        "type": "function",
-                        "function": {"name": "a", "arguments": "{}"}
-                    }]
+                    "tool_calls": [
+                        {
+                            "id": "first",
+                            "type": "function",
+                            "function": {"name": "a", "arguments": "{}"},
+                        }
+                    ]
                 }
             },
             {
                 "message": {
-                    "tool_calls": [{
-                        "id": "second",
-                        "type": "function",
-                        "function": {"name": "b", "arguments": "{}"}
-                    }]
+                    "tool_calls": [
+                        {
+                            "id": "second",
+                            "type": "function",
+                            "function": {"name": "b", "arguments": "{}"},
+                        }
+                    ]
                 }
             },
         ]
@@ -483,3 +479,60 @@ def test_extractor_unknown_fmt_returns_empty():
     # Unknown fmt falls through all conditionals → returns empty list
     result = ex.extract(ANTHROPIC_SINGLE)
     assert result == []
+
+
+def test_openai_empty_string_arguments():
+    # OpenAI commonly sends "" for no-argument tool calls.
+    resp = {
+        "choices": [
+            {
+                "message": {
+                    "tool_calls": [
+                        {
+                            "id": "x",
+                            "type": "function",
+                            "function": {"name": "now", "arguments": ""},
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+    calls = extract_from_openai(resp)
+    assert calls[0].arguments == {}
+    assert calls[0].raw_arguments == ""
+
+
+def test_openai_missing_arguments_field():
+    # A tool call with no "arguments" key at all yields an empty dict.
+    resp = {
+        "choices": [
+            {
+                "message": {
+                    "tool_calls": [
+                        {
+                            "id": "x",
+                            "type": "function",
+                            "function": {"name": "now"},
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+    calls = extract_from_openai(resp)
+    assert calls[0].arguments == {}
+    assert calls[0].raw_arguments is None
+
+
+def test_helpers_importable_from_package_root():
+    # extract_from_anthropic / extract_from_openai are part of the public API.
+    from llm_tool_call_extractor import (
+        extract_from_anthropic as pkg_anthropic,
+    )
+    from llm_tool_call_extractor import (
+        extract_from_openai as pkg_openai,
+    )
+
+    assert pkg_anthropic is extract_from_anthropic
+    assert pkg_openai is extract_from_openai

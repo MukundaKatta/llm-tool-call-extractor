@@ -2,10 +2,18 @@
 
 from __future__ import annotations
 
-from .core import ResponseFormat, ToolCallExtractor, ToolCallRequest
+from .core import (
+    ResponseFormat,
+    ToolCallExtractor,
+    ToolCallRequest,
+    extract_from_anthropic,
+    extract_from_openai,
+)
 
 __all__ = [
     "ResponseFormat",
     "ToolCallExtractor",
     "ToolCallRequest",
+    "extract_from_anthropic",
+    "extract_from_openai",
 ]

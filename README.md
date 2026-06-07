@@ -60,8 +60,12 @@ if extractor.has_tool_calls(response):
 ## Explicit format
 
 ```python
-from llm_tool_call_extractor import ToolCallExtractor, ResponseFormat
-from llm_tool_call_extractor.core import extract_from_anthropic, extract_from_openai
+from llm_tool_call_extractor import (
+    ToolCallExtractor,
+    ResponseFormat,
+    extract_from_anthropic,
+    extract_from_openai,
+)
 
 # Explicit format
 ex = ToolCallExtractor(fmt=ResponseFormat.ANTHROPIC)
